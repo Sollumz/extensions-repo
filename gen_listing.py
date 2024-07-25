@@ -44,7 +44,7 @@ EXAMPLE_LISTING_JSON = """{
        "license": ["SPDX:MIT"],
        "website": "http://sollumz.org/",
        "schema_version": "1.0.0"
-    },
+    }
     ]
 }
 """
