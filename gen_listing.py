@@ -30,7 +30,7 @@ def main():
 
     output_directory.mkdir(exist_ok=True)
 
-    with open(output_directory.joinpath("packages.json"), mode="w") as f:
+    with open(output_directory.joinpath("index.json"), mode="w") as f:
         f.write('{"hello": "world"}')
 
 if __name__ == "__main__":
