@@ -1,0 +1,77 @@
+name: Pages Deployment
+
+on:
+  push:
+  pull_request:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Upgrade PIP
+        run: python -m pip install --upgrade pip
+
+      - name: Cache Blender ${{ matrix.blender-version }}
+        uses: actions/cache@v3
+        id: cache-blender
+        with:
+          path: |
+            _blender/blender-*
+            _blender-executable-path.txt
+          key: ${{ runner.os }}-${{ matrix.blender-version }}
+
+      - name: Download Blender ${{ matrix.blender-version }}
+        if: steps.cache-blender.outputs.cache-hit != 'true'
+        run: |
+          Set-PSDebug -Trace 2
+          # Use blender-downloader fork with specifes a Sollumz User-Agent since the default python User-Agent is currently blocked
+          # python -m pip install --upgrade blender-downloader
+          python -m pip install git+https://github.com/Sollumz/blender-downloader.git
+          python -m pip list
+          mkdir _blender
+          blender-downloader ${{ matrix.blender-version }} -d _blender --extract --remove-compressed --print-blender-executable --quiet | Out-File -FilePath _blender-executable-path.txt
+          get-content _blender-executable-path.txt
+
+      - name: Generate Listing
+        run: |
+          $BLENDER = get-content _blender-executable-path.txt
+          python gen_listing.py "$BLENDER" ./_repo
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_repo
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: windows-latest
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
