@@ -14,27 +14,30 @@ concurrency:
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      blender-version: '4.2.0'
+      python-version: '3.11'
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ env.python-version }}
         uses: actions/setup-python@v3
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.python-version }}
 
       - name: Upgrade PIP
         run: python -m pip install --upgrade pip
 
-      - name: Cache Blender ${{ matrix.blender-version }}
+      - name: Cache Blender ${{ env.blender-version }}
         uses: actions/cache@v3
         id: cache-blender
         with:
           path: |
             _blender/blender-*
             _blender-executable-path.txt
-          key: ${{ runner.os }}-${{ matrix.blender-version }}
+          key: ${{ runner.os }}-${{ env.blender-version }}
 
-      - name: Download Blender ${{ matrix.blender-version }}
+      - name: Download Blender ${{ env.blender-version }}
         if: steps.cache-blender.outputs.cache-hit != 'true'
         run: |
           Set-PSDebug -Trace 2
@@ -43,7 +46,7 @@ jobs:
           python -m pip install git+https://github.com/Sollumz/blender-downloader.git
           python -m pip list
           mkdir _blender
-          blender-downloader ${{ matrix.blender-version }} -d _blender --extract --remove-compressed --print-blender-executable --quiet | Out-File -FilePath _blender-executable-path.txt
+          blender-downloader ${{ env.blender-version }} -d _blender --extract --remove-compressed --print-blender-executable --quiet | Out-File -FilePath _blender-executable-path.txt
           get-content _blender-executable-path.txt
 
       - name: Generate Listing
