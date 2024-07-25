@@ -30,7 +30,7 @@ EXAMPLE_LISTING_JSON = """{
        "schema_version": "1.0.0"
     },
     {
-       "id": "sollumz-nightly",
+       "id": "sollumz_nightly",
        "name": "Sollumz (Nightly)",
        "tagline": "Pretty epic add-on. Latest. Unstable",
        "version": "2.5.0-nightly-abcd123",
