@@ -8,7 +8,6 @@ Example:
 
 import argparse
 import subprocess
-import shutil
 import time
 import tomllib
 from pathlib import Path
@@ -22,7 +21,6 @@ PACKAGES = (
     # repo,         commit-ish/STABLE/DEVELOPMENT
     (SOLLUMZ_REPO,  STABLE),
     (SOLLUMZ_REPO,  DEVELOPMENT),
-    (SOLLUMZ_REPO,  "dev/extension-manifest"),  # TODO: remove once merged to main
 )
 
 
