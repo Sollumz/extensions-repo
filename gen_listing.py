@@ -12,15 +12,14 @@ import time
 import tomllib
 from pathlib import Path
 
-STABLE = "<stable_marker>"            # latest release
-DEVELOPMENT = "<development_marker>"  # latest commit
+STABLE = "<stable_marker>"  # latest release
 
 SOLLUMZ_REPO = "https://github.com/Sollumz/Sollumz.git"
 
 PACKAGES = (
-    # repo,         commit-ish/STABLE/DEVELOPMENT
+    # repo,         commit-ish/STABLE
     (SOLLUMZ_REPO,  STABLE),
-    (SOLLUMZ_REPO,  DEVELOPMENT),
+    (SOLLUMZ_REPO,  "main"), # development package
 )
 
 
@@ -90,8 +89,6 @@ def main():
 
         if commitish == STABLE:
             commitish = git_get_latest_release(work_dir)
-        elif commitish == DEVELOPMENT:
-            commitish = "main"
 
         git_checkout(work_dir, commitish)
 
