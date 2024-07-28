@@ -10,57 +10,19 @@ import argparse
 import subprocess
 import shutil
 import time
+import tomllib
 from pathlib import Path
 
-EXAMPLE_LISTING_JSON = """{
-   "version": "v1",
-   "blocklist": [],
-   "data": [
-    {
-       "id": "sollumz",
-       "name": "Sollumz",
-       "tagline": "Pretty epic add-on",
-       "version": "2.5.0",
-       "type": "add-on",
-       "archive_size": 856650,
-       "archive_hash": "sha256:3d2972a6f6482e3c502273434ca53eec0c5ab3dae628b55c101c95a4bc4e15b2",
-       "archive_url": "https://repo.sollumz.org/packages/sollumz",
-       "blender_version_min": "4.2.0",
-       "maintainer": "Sollumz Team",
-       "tags": ["Pipeline"],
-       "license": ["SPDX:MIT"],
-       "website": "http://sollumz.org/",
-       "schema_version": "1.0.0"
-    },
-    {
-       "id": "sollumz_nightly",
-       "name": "Sollumz (Nightly)",
-       "tagline": "Pretty epic add-on. Latest. Unstable",
-       "version": "2.5.0-nightly-abcd123",
-       "type": "add-on",
-       "archive_size": 856650,
-       "archive_hash": "sha256:3d2972a6f6482e3c502273434ca53eec0c5ab3dae628b55c101c95a4bc4e15b2",
-       "archive_url": "https://repo.sollumz.org/packages/sollumz-nightly",
-       "blender_version_min": "4.2.0",
-       "maintainer": "Sollumz Team",
-       "tags": ["Pipeline"],
-       "license": ["SPDX:MIT"],
-       "website": "http://sollumz.org/",
-       "schema_version": "1.0.0"
-    }
-    ]
-}
-"""
-
-STABLE = "<stable_marker>"    # latest release
-NIGHTLY = "<nightly_marker>"  # latest commit
+STABLE = "<stable_marker>"            # latest release
+DEVELOPMENT = "<development_marker>"  # latest commit
 
 SOLLUMZ_REPO = "https://github.com/Sollumz/Sollumz.git"
 
 PACKAGES = (
-    # repo,         commit-ish/STABLE/NIGHTLY
+    # repo,         commit-ish/STABLE/DEVELOPMENT
     (SOLLUMZ_REPO,  STABLE),
-    (SOLLUMZ_REPO,  NIGHTLY),
+    (SOLLUMZ_REPO,  DEVELOPMENT),
+    (SOLLUMZ_REPO,  "dev/extension-manifest"),  # TODO: remove once merged to main
 )
 
 
@@ -91,7 +53,7 @@ def git_checkout(directory_name, commitish):
 
 def git_archive(directory_name, commitish, output_file):
     proc = subprocess.run(
-        ["git", "archive", "--prefix", "Sollumz/", "-o", output_file, commitish],
+        ["git", "archive", "--prefix", Path(output_file).stem + "/", "-o", output_file, commitish],
         cwd=directory_name,
     )
     proc.check_returncode()
@@ -107,7 +69,7 @@ def blender_extension_server_generate(blender_exe, repo_dir):
 def main():
     parser = argparse.ArgumentParser(
         prog="gen_listing",
-        description="Generates the packages listing JSON for Sollumz stable and nightly."
+        description="Generates the packages listing JSON for the Sollumz extensions repository."
     )
     parser.add_argument("blender_executable", type=Path)
     parser.add_argument("output_directory", type=Path)
@@ -123,20 +85,51 @@ def main():
 
     output_directory.mkdir(exist_ok=True)
 
-    # with open(output_directory.joinpath("index.json"), mode="w") as f:
-    #     f.write(EXAMPLE_LISTING_JSON)
+    used_extension_ids = {}
+    for repo_url, commitish in PACKAGES:
+        work_dir = ".work_dir_" + time.strftime("%Y%m%d%H%M%S")
+        git_clone_repo(repo_url, work_dir)
 
-    work_dir = "work_dir_" + time.strftime("%Y%m%d-%H%M%S")
-    git_clone_repo(PACKAGES[0][0], work_dir)
-    # latest_release = git_get_latest_release(work_dir)
-    git_checkout(work_dir, "dev/extension-manifest")
-    git_archive(work_dir, "HEAD", output_directory.joinpath(
-        "Sollumz.zip").absolute())
+        if commitish == STABLE:
+            commitish = git_get_latest_release(work_dir)
+        elif commitish == DEVELOPMENT:
+            commitish = "main"
+
+        git_checkout(work_dir, commitish)
+
+        blender_manifest_path = Path(work_dir).joinpath("blender_manifest.toml")
+        if not blender_manifest_path.is_file():
+            print(
+                f"Package '{repo_url}'-{commitish} is missing the blender_manifest.toml. "
+                "Not generating an extension package."
+            )
+            continue
+
+        with open(blender_manifest_path, "rb") as f:
+            blender_manifest = tomllib.load(f)
+
+        if "id" not in blender_manifest:
+            print(
+                f"Package '{repo_url}'-{commitish} is missing 'id' in the blender_manifest.toml. "
+                "Not generating an extension package."
+            )
+            continue
+
+        extension_id = blender_manifest["id"]
+
+        if extension_id in used_extension_ids:
+            other = used_extension_ids[extension_id]
+            print(
+                f"Extension ID '{extension_id}' from package '{repo_url}'-{commitish} already in use by package {other}. "
+                "Not generating an extension package."
+            )
+            continue
+
+        used_extension_ids[extension_id] = f"'{repo_url}'-{commitish}"
+
+        git_archive(work_dir, commitish, output_directory.joinpath(f"{extension_id}.zip").absolute())
+
     blender_extension_server_generate(blender_executable, output_directory)
-
-    # time.sleep(5)
-
-    # shutil.rmtree("work_dir")
 
 
 if __name__ == "__main__":
