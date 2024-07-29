@@ -10,6 +10,7 @@ import argparse
 import subprocess
 import time
 import tomllib
+import uuid
 from pathlib import Path
 
 STABLE = "<stable_marker>"  # latest release
@@ -84,7 +85,7 @@ def main():
 
     used_extension_ids = {}
     for repo_url, commitish in PACKAGES:
-        work_dir = ".work_dir_" + time.strftime("%Y%m%d%H%M%S")
+        work_dir = ".work_dir_" + uuid.uuid4().hex
         git_clone_repo(repo_url, work_dir)
 
         if commitish == STABLE:
