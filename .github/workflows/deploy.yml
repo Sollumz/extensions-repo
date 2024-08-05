@@ -51,6 +51,10 @@ jobs:
           blender-downloader ${{ env.blender-version }} -d _blender --extract --remove-compressed --print-blender-executable --quiet | Out-File -FilePath _blender-executable-path.txt
           get-content _blender-executable-path.txt
 
+      - name: Install Dependencies
+        run: |
+          python -m pip install -r ./requirements.txt
+
       - name: Generate Listing
         run: |
           $BLENDER = get-content _blender-executable-path.txt
