@@ -63,7 +63,7 @@ def git_archive(directory_name, commitish, output_file):
 
 def blender_extension_server_generate(blender_exe, repo_dir):
     proc = subprocess.run(
-        [blender_exe, "--command", "extension", "server-generate", "--repo-dir", repo_dir],
+        [blender_exe, "--command", "extension", "server-generate", "--html", "--repo-dir", repo_dir],
     )
     proc.check_returncode()
 
