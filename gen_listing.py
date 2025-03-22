@@ -18,12 +18,14 @@ import io
 STABLE = "<stable_marker>"  # latest release
 
 SOLLUMZ_REPO = ("Sollumz", "Sollumz")  # (owner, name)
+SOLLUMZ_RDR_REPO = ("Sollumz", "Sollumz-RDR")
 VICHO_TOOLS_REPO = ("Hancapo", "VichoTools")
 
 PACKAGES = (
     # repo             commit-ish/STABLE
     (SOLLUMZ_REPO,     STABLE),
     (SOLLUMZ_REPO,     "main"),  # development package
+    (SOLLUMZ_RDR_REPO, "main"),
     (VICHO_TOOLS_REPO, STABLE),
 )
 
