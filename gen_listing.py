@@ -20,13 +20,15 @@ STABLE = "<stable_marker>"  # latest release
 SOLLUMZ_REPO = ("Sollumz", "Sollumz")  # (owner, name)
 SOLLUMZ_RDR_REPO = ("Sollumz", "Sollumz-RDR")
 VICHO_TOOLS_REPO = ("Hancapo", "VichoTools")
+RUBY_MLO_SCALEFORM_TOOLS_REPO = ("Rubyyss", "MLOScaleformTool")
 
 PACKAGES = (
     # repo             commit-ish/STABLE
-    (SOLLUMZ_REPO,     STABLE),
-    (SOLLUMZ_REPO,     "main"),  # development package
-    (SOLLUMZ_RDR_REPO, "main"),
-    (VICHO_TOOLS_REPO, STABLE),
+    (SOLLUMZ_REPO,                  STABLE),
+    (SOLLUMZ_REPO,                  "main"),  # development package
+    (SOLLUMZ_RDR_REPO,              "main"),
+    (VICHO_TOOLS_REPO,              STABLE),
+    (RUBY_MLO_SCALEFORM_TOOLS_REPO, STABLE),
 )
 
 # TODO: for dev package check success CI (https://api.github.com/repos/Sollumz/Sollumz/commits/8769218f2882f548b914de17ff4264d919ce0c44/check-runs)
